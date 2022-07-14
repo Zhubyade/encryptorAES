@@ -9,7 +9,7 @@ from utils import AESCipher
 app = Flask(__name__)
 
 UPLOAD_FOLDER: str = './uploads'
-ALLOWED_EXTENSIONS: set = {'txt', 'json'}
+ALLOWED_EXTENSIONS: set = {'txt', 'json', 'docx', 'doc'}
 
 app.logger.setLevel(logging.DEBUG)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -33,7 +33,7 @@ def index() -> TemplateGlobalCallable:
 
     app.logger.info("Index Page")
 
-    author_name: str | None = "Zubay"
+    author_name: str | None = None
 
     return render_template("index.html", name = author_name)
 
@@ -95,12 +95,15 @@ def decryption() -> TemplateGlobalCallable:
             decryption_key: str = data['key']
         else:
             decryption_key: str = "hello"
-
-        decryption = AESCipher(decryption_key)
-        decrypted_text: str = decryption.decrypt(text_plain)
-        message["type"] = "success"
-        message["body"] = "Decrypted Successfully!"
-
+        try:
+            decryption = AESCipher(decryption_key)
+            decrypted_text: str | None = decryption.decrypt(text_plain)
+            message["type"] = "success"
+            message["body"] = "Decrypted Successfully!"
+        except Exception:
+            message["type"] = "danger"
+            message["body"] = "Please Enter a valid decryption key!"
+            decrypted_text = None
     return render_template("decrypt.html", message = message, decrypted_text = decrypted_text)
 
 @app.route('/download_txt/<name>')
